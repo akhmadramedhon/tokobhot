@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Input Pembelian</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <%- include('includes/nav') %>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow border-0">
+                    <div class="card-header bg-white py-3">
+                        <h4 class="mb-0 fw-bold">Kasir / Input Pembelian</h4>
+                    </div>
+                    <div class="card-body">
+                        <form action="/checkout" method="POST">
+                            <div class="mb-3">
+                                <label class="form-label">Nama Pelanggan</label>
+                                <input type="text" name="customer_name" class="form-control" required placeholder="Contoh: Pembeli Umum">
+                            </div>
+
+                            <label class="form-label fw-bold">Daftar Barang</label>
+                            <div id="items-container">
+                                <div class="row mb-2 item-row">
+                                    <div class="col-7">
+                                        <select name="product_ids" class="form-select" required onchange="calculateTotal()">
+                                            <option value="" data-price="0">Pilih Produk...</option>
+                                            <% products.forEach(p => { %>
+                                                <option value="<%= p.id %>" data-price="<%= p.price %>">
+                                                    <%= p.name %> (Stok: <%= p.quantity %>) - Rp <%= p.price.toLocaleString() %>
+                                                </option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="number" name="quantities" class="form-control" placeholder="Jml" min="1" value="1" required onchange="calculateTotal()">
+                                    </div>
+                                    <div class="col-2">
+                                        <button type="button" class="btn btn-danger w-100 remove-btn" disabled>-</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-outline-primary w-100 mb-3" onclick="addRow()">
+                                + Tambah Barang Lain
+                            </button>
+
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>Estimasi Total:</h5>
+                                <h3 class="fw-bold text-success" id="total-display">Rp 0</h3>
+                            </div>
+
+                            <button type="submit" class="btn btn-success btn-lg w-100">Proses Pembelian</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addRow() {
+            const container = document.getElementById('items-container');
+            const firstRow = container.querySelector('.item-row');
+            const newRow = firstRow.cloneNode(true);
+            
+            newRow.querySelector('select').value = "";
+            newRow.querySelector('input').value = "1";
+            newRow.querySelector('.remove-btn').disabled = false; // Tombol hapus aktif
+            newRow.querySelector('.remove-btn').onclick = function() { 
+                this.closest('.item-row').remove(); 
+                calculateTotal();
+            };
+
+            container.appendChild(newRow);
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            const rows = document.querySelectorAll('.item-row');
+            
+            rows.forEach(row => {
+                const select = row.querySelector('select');
+                const qtyInput = row.querySelector('input');
+                
+                const price = select.options[select.selectedIndex].getAttribute('data-price') || 0;
+                const qty = qtyInput.value || 0;
+                
+                total += (parseInt(price) * parseInt(qty));
+            });
+
+            document.getElementById('total-display').innerText = "Rp " + total.toLocaleString('id-ID');
+        }
+    </script>
+</body>
+</html>
